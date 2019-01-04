@@ -41,14 +41,12 @@ module ActiveRecordCustomPreloader
 
       # find custom loader by name
       # returns instance of custom loader
-      def custom_loader_for(name)
-        return name.new(self, nil, {}) if name.is_a?(Class)
-
+      def custom_loader_for(name, options = {})
         opts = _custom_loaders[name]
         raise Error, "custom preloader #{name.inspect} does not exist" if opts.nil?
         klass = opts[:class_name].safe_constantize
         raise Error, "custom preloader klass #{opts[:class_name]} can't be found" if klass.nil?
-        klass.new(self, name, opts[:args])
+        klass.new self, name, opts[:args].merge(options)
       end
 
       # check if class has custom loader for name
@@ -84,7 +82,7 @@ module ActiveRecordCustomPreloader
     def _custom_preloaded_value(name)
       raise ArgumentError, "custom preloader #{name.inspect} does not exist" unless _custom_loaders.key?(name)
       unless _custom_preloaded_values.key?(name)
-        _custom_loader_for(name).preload([self])
+        custom_loader_for(name).preload([self])
       end
       _custom_preloaded_values[name]
     end
