@@ -68,6 +68,10 @@ module ActiveRecordCustomPreloader
       _custom_preloaded_values.delete(name)
     end
 
+    def has_custom_preloaded_value?(name)
+      _custom_preloaded_values.key?(name)
+    end
+
     # sets custom preloaded value for name
     def _set_custom_preloaded_value(name, value)
       _custom_preloaded_values[name] = value
@@ -82,7 +86,7 @@ module ActiveRecordCustomPreloader
     def _custom_preloaded_value(name)
       raise ArgumentError, "custom preloader #{name.inspect} does not exist" unless _custom_loaders.key?(name)
       unless _custom_preloaded_values.key?(name)
-        custom_loader_for(name).preload([self])
+        self.class.custom_loader_for(name).preload([self])
       end
       _custom_preloaded_values[name]
     end
