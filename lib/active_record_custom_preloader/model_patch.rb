@@ -85,10 +85,12 @@ module ActiveRecordCustomPreloader
     # fetch if necessary and return custom preloaded value for name
     def _custom_preloaded_value(name)
       raise ArgumentError, "custom preloader #{name.inspect} does not exist" unless _custom_loaders.key?(name)
-      unless _custom_preloaded_values.key?(name)
-        self.class.custom_loader_for(name).preload([self])
-      end
+      _load_custom_preloaded_value(name) unless has_custom_preloaded_value?(name)
       _custom_preloaded_values[name]
+    end
+
+    def _load_custom_preloaded_value(name, options = {})
+      self.class.custom_loader_for(name, options).preload([self])
     end
   end
 end
