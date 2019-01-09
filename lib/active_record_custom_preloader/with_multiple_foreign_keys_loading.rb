@@ -75,7 +75,7 @@ module ActiveRecordCustomPreloader
       condition_part = association_foreign_keys_names.map { |name| "#{name} = ?" }.join(' AND ')
       conditions = []
       keys.size.times { conditions.push(condition_part) }
-      condition_sql = conditions.map { |condition| "(#{condition})" }
+      condition_sql = conditions.map { |condition| "(#{condition})" }.join(' OR ')
       condition_bindings = keys.flatten
       return associations_scope.none if condition_sql.blank? || condition_bindings.empty?
       associations = associations_scope.where(condition_sql, *condition_bindings).to_a
