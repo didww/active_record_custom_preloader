@@ -4,10 +4,20 @@ custom preloader for ActiveRecord model
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add this line to your application's `Gemfile`:
 
 ```ruby
 gem 'active_record_custom_preloader'
+```
+
+if you use Rails you should require `railtie.rb` file 
+like this in `config/application.rb`:
+```ruby
+require 'active_record_custom_preloader/railtie'
+```
+or like this in `Gemfile`
+```ruby
+gem 'active_record_custom_preloader', require: 'active_record_custom_preloader/railtie'
 ```
 
 And then execute:
@@ -25,7 +35,10 @@ class Person < ActiveRecord::Base
   add_custom_loader :_stats, class_name: 'StatsPreloader'
 end
 
-class StatsPreloader < ActiveRecordCustomerPreloader::Preloader
+class ApplicationPreloader < ActiveRecordCustomPreloader::Preloader
+end
+
+class StatsPreloader < ApplicationPreloader
   def preload(records)
     ids = records.map(&:id)
     values = CustomApi.fetch_stats_for(ids)
