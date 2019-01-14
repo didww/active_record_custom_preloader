@@ -45,7 +45,8 @@ module ActiveRecordCustomPreloader
     end
 
     # association table is queried by return value of this method.
-    # returns array of keys for parent record to match association record
+    # returns array of keys for parent record to match association record.
+    # if you want to skip association for particular record - return nil.
     def record_foreign_keys(parent_record)
       association_foreign_keys(parent_record)
     end
@@ -71,7 +72,7 @@ module ActiveRecordCustomPreloader
     end
 
     def fetch_association(parent_records)
-      keys = parent_records.map(&method(:record_foreign_keys))
+      keys = parent_records.map(&method(:record_foreign_keys)).compact
       condition_part = association_foreign_keys_names.map { |name| "#{name} = ?" }.join(' AND ')
       conditions = []
       keys.size.times { conditions.push(condition_part) }
