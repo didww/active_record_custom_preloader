@@ -39,8 +39,13 @@ class CustomTestSuite
 end
 
 CustomTestSuite.instance = CustomTestSuite.new('tmp/test.sqlite') do
+  create_table :departments do |t|
+    t.string :name
+  end
+
   create_table :users do |t|
     t.string :name
     t.integer :pricelist_id
+    t.text :department_ids
   end
 end

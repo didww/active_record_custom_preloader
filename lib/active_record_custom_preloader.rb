@@ -5,6 +5,7 @@ require 'active_record_custom_preloader/associations_preloader'
 require 'active_record_custom_preloader/model_patch'
 require 'active_record_custom_preloader/relation_patch'
 require 'active_record_custom_preloader/with_multiple_foreign_keys_loading'
+require 'active_record_custom_preloader/with_array_foreign_keys_loading'
 
 module ActiveRecordCustomPreloader
   class Error < StandardError

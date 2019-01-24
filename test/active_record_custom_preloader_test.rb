@@ -54,4 +54,26 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal [user1.id], all_result.first._simple.ids
     assert_equal user1.id, all_result.first._simple.record_id
   end
+
+  def test_array_foreign_keys_loader
+    dep1 = Department.create!(name: 'manager')
+    dep2 = Department.create!(name: 'developer')
+    dep3 = Department.create!(name: 'support')
+    user1 = User.create! name: 'John Doe', department_ids: [dep2.id, dep1.id]
+    user2 = User.create! name: 'Jane Doe', department_ids: [dep3.id, nil]
+    user3 = User.create! name: 'Bob', department_ids: nil
+    scope = User.all.preload(:_departments)
+    collection = scope.order(id: :asc).to_a
+
+    assert_equal 3, collection.size
+
+    assert_equal user1.id, collection.first.id
+    assert_equal [dep2.id, dep1.id], collection.first._departments.map(&:id)
+
+    assert_equal user2.id, collection.second.id
+    assert_equal [dep3.id], collection.second._departments.map(&:id)
+
+    assert_equal user3.id, collection.third.id
+    assert_equal [], collection.third._departments
+  end
 end

@@ -45,13 +45,14 @@ module ActiveRecordCustomPreloader
     # array for has_many and model or nil for has_one.
     def associations_by_parent_record(parent_record, association_records)
       ids = parent_record.public_send(association_foreign_keys_name)
+      return [] if ids.nil? || ids.empty?
       result = association_records.select { |r| ids.include?(r.id) }
       result.sort_by! { |r| ids.index r.id } if keep_sorting
       result
     end
 
     def fetch_association(parent_records)
-      ids = parent_records.map(&association_foreign_keys_name).flatten.uniq
+      ids = parent_records.map(&association_foreign_keys_name).flatten.uniq.compact
       associations_scope.where(id: ids).to_a
     end
 

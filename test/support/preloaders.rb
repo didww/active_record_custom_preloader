@@ -10,3 +10,10 @@ class SimpleUserPreloader < ApplicationPreloader
     end
   end
 end
+
+class UserDepartmentsPreloader< ApplicationPreloader
+  include ActiveRecordCustomPreloader::WithArrayForeignKeysLoading
+  self.model_class_name = 'Department'
+  self.association_foreign_keys_name = :department_ids
+  self.keep_sorting = true
+end
