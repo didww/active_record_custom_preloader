@@ -62,9 +62,9 @@ module ActiveRecordCustomPreloader
     end
 
     def preload(parent_records)
-      grouped_associations = fetch_association(parent_records)
+      association_records = fetch_association(parent_records)
       parent_records.each do |parent_record|
-        value = associations_by_parent_record(grouped_associations, parent_record)
+        value = associations_by_parent_record(parent_record, association_records)
         parent_record._set_custom_preloaded_value(name, value)
       end
     end
