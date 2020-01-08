@@ -1,6 +1,9 @@
 # ActiveRecordCustomPreloader
 
-custom preloader for ActiveRecord model
+Custom preloader for ActiveRecord model.
+
+Gem version `2.X.X` and `master` branch compatible with Rails `6.X.X` and upper.
+For Rails `5.X.X` see branch `rails-5` and gem version `1.X.X`.
 
 ## Installation
 
