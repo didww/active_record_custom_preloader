@@ -76,4 +76,39 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal user3.id, collection.third.id
     assert_equal [], collection.third._departments
   end
+
+  def test_combine_with_ar_assocs
+    pricelist = Pricelist.create!(name: 'main')
+    pricelist2 = Pricelist.create!(name: 'secondary')
+    user1 = User.create(name: 'john', pricelist_id: pricelist.id)
+    user2 = User.create(name: 'jane', pricelist_id: pricelist.id)
+    User.create(name: 'bob', pricelist_id: pricelist2.id)
+    Comment.create!(user_id: user1.id, text: 'qwe')
+    Comment.create!(user_id: user1.id, text: 'asd')
+    Comment.create!(user_id: user2.id, text: 'zxc')
+    ApiAccess.create!(user_id: user1.id, token: 'test')
+    scope = User.all.preload(:comments, :api_access, :pricelist, :_simple)
+
+    all_result = scope.where(pricelist_id: 1).order(id: :asc).to_a
+    assert_equal 2, all_result.size
+    assert_equal [user1.id, user2.id], all_result.first._simple.ids
+    assert_equal user1.id, all_result.first._simple.record_id
+    assert_equal [user1.id, user2.id], all_result.second._simple.ids
+    assert_equal user2.id, all_result.second._simple.record_id
+
+    assert all_result.first.association(:comments).loaded?
+    assert all_result.second.association(:comments).loaded?
+    assert 2, all_result.first.comments.size
+    assert 1, all_result.second.comments.size
+
+    assert all_result.first.association(:api_access).loaded?
+    assert all_result.second.association(:api_access).loaded?
+    assert all_result.first.api_access.present?
+    assert_nil all_result.second.api_access
+
+    assert all_result.first.association(:pricelist).loaded?
+    assert all_result.second.association(:pricelist).loaded?
+    assert_equal pricelist, all_result.first.pricelist
+    assert_equal pricelist, all_result.second.pricelist
+  end
 end
