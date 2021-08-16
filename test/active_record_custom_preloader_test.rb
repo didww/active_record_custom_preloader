@@ -7,8 +7,9 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
 
   def teardown
     CustomTestSuite.instance.teardown
-    SimpleUserPreloader._called = 0
+    SimplePreloader._called = 0
     UserDepartmentsPreloader._called = 0
+    UserPricesPreloader._called = 0
   end
 
   def test_that_it_has_a_version_number
@@ -27,7 +28,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal user1.id, all_result.first._simple.record_id
     assert_equal [user1.id, user2.id], all_result.second._simple.ids
     assert_equal user2.id, all_result.second._simple.record_id
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
   end
 
   def test_preload_with_options
@@ -45,7 +46,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal [user1.id, user2.id], all_result.second._simple.ids
     assert_equal user2.id, all_result.second._simple.record_id
     assert_equal args, all_result.second._simple.args
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
   end
 
   def test_not_preloaded
@@ -57,9 +58,9 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal 2, all_result.size
     assert_equal [user1.id], all_result.first._simple.ids
     assert_equal user1.id, all_result.first._simple.record_id
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
     all_result.second._simple
-    assert_equal 2, SimpleUserPreloader._called
+    assert_equal 2, SimplePreloader._called
   end
 
   def test_array_foreign_keys_loader
@@ -118,7 +119,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert all_result.second.association(:pricelist).loaded?
     assert_equal pricelist, all_result.first.pricelist
     assert_equal pricelist, all_result.second.pricelist
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
   end
 
   def test_duplicate_simple_preload
@@ -134,9 +135,59 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     all_result = scope.to_a
     users = all_result.map(&:users).flatten
     assert_equal 2, users.size
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
     users.first._simple
     users.second._simple
-    assert_equal 1, SimpleUserPreloader._called
+    assert_equal 1, SimplePreloader._called
+  end
+
+  def test_custom_preloads_with_nested
+    pricelist_1 = Pricelist.create!(name: 'pricelist_1')
+    pricelist_2 = Pricelist.create!(name: 'pricelist_2')
+    price_bundle_1 = PriceBundle.create!(name: 'price_bundle_1')
+    price_bundle_2 = PriceBundle.create!(name: 'price_bundle_2')
+    User.create!(name: 'user_11', pricelist: pricelist_1, price_bundle: price_bundle_1)
+    User.create!(name: 'user_12', pricelist: pricelist_1, price_bundle: price_bundle_2)
+    User.create!(name: 'user_21', pricelist: pricelist_2, price_bundle: price_bundle_1)
+
+    # user_11 has 2 prices
+    Price.create!(price: 1.11, pricelist: pricelist_1, price_bundle: price_bundle_1)
+    Price.create!(price: 1.12, pricelist: pricelist_1, price_bundle: price_bundle_1)
+
+    # user_12 has 0 prices
+
+    # user_21 has 1 price
+    Price.create!(price: 2.11, pricelist: pricelist_2, price_bundle: price_bundle_1)
+
+    scope = User.all.preload(
+      _prices: [
+        :pricelist,
+        :_simple
+      ]
+    )
+    all_result = scope.to_a
+
+    user_11 = all_result.detect { |r| r.pricelist_id == pricelist_1.id && r.price_bundle_id == price_bundle_1.id }
+    user_12 = all_result.detect { |r| r.pricelist_id == pricelist_1.id && r.price_bundle_id == price_bundle_2.id }
+    user_21 = all_result.detect { |r| r.pricelist_id == pricelist_2.id && r.price_bundle_id == price_bundle_1.id }
+
+    assert_equal 1, UserPricesPreloader._called
+    assert_equal 1, SimplePreloader._called
+
+    assert_equal [1.11, 1.12], user_11._prices.map(&:price)
+    user_11._prices.each do |price|
+      assert price.association(:pricelist).loaded?
+      price._simple
+    end
+
+    assert_equal [], user_12._prices
+
+    assert_equal [2.11], user_21._prices.map(&:price)
+    price_21 = user_11._prices.first
+    assert price_21.association(:pricelist).loaded?
+    price_21._simple
+
+    assert_equal 1, UserPricesPreloader._called
+    assert_equal 1, SimplePreloader._called
   end
 end
