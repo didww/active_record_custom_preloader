@@ -7,6 +7,8 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
 
   def teardown
     CustomTestSuite.instance.teardown
+    SimpleUserPreloader._called = 0
+    UserDepartmentsPreloader._called = 0
   end
 
   def test_that_it_has_a_version_number
@@ -25,6 +27,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal user1.id, all_result.first._simple.record_id
     assert_equal [user1.id, user2.id], all_result.second._simple.ids
     assert_equal user2.id, all_result.second._simple.record_id
+    assert_equal 1, SimpleUserPreloader._called
   end
 
   def test_preload_with_options
@@ -42,6 +45,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal [user1.id, user2.id], all_result.second._simple.ids
     assert_equal user2.id, all_result.second._simple.record_id
     assert_equal args, all_result.second._simple.args
+    assert_equal 1, SimpleUserPreloader._called
   end
 
   def test_not_preloaded
@@ -53,6 +57,9 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert_equal 2, all_result.size
     assert_equal [user1.id], all_result.first._simple.ids
     assert_equal user1.id, all_result.first._simple.record_id
+    assert_equal 1, SimpleUserPreloader._called
+    all_result.second._simple
+    assert_equal 2, SimpleUserPreloader._called
   end
 
   def test_array_foreign_keys_loader
@@ -75,6 +82,7 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
 
     assert_equal user3.id, collection.third.id
     assert_equal [], collection.third._departments
+    assert_equal 1, UserDepartmentsPreloader._called
   end
 
   def test_combine_with_ar_assocs
@@ -110,5 +118,25 @@ class ActiveRecordCustomPreloaderTest < Minitest::Test
     assert all_result.second.association(:pricelist).loaded?
     assert_equal pricelist, all_result.first.pricelist
     assert_equal pricelist, all_result.second.pricelist
+    assert_equal 1, SimpleUserPreloader._called
+  end
+
+  def test_duplicate_simple_preload
+    pricelist = Pricelist.create!(name: 'test')
+    User.create!(name: 'john', pricelist_id: pricelist.id)
+    User.create!(name: 'jane', pricelist_id: pricelist.id)
+
+    scope = Pricelist
+            .all
+            .preload(users: :_simple)
+            .preload(users: [:comments, :_simple])
+
+    all_result = scope.to_a
+    users = all_result.map(&:users).flatten
+    assert_equal 2, users.size
+    assert_equal 1, SimpleUserPreloader._called
+    users.first._simple
+    users.second._simple
+    assert_equal 1, SimpleUserPreloader._called
   end
 end
