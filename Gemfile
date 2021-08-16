@@ -8,3 +8,5 @@ if ENV['RAILS_VERSION']
 else
   gem 'activerecord'
 end
+
+gem 'rake'
