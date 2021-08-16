@@ -59,8 +59,19 @@ CustomTestSuite.instance = CustomTestSuite.new('tmp/test.sqlite') do
   end
 
   create_table :users do |t|
-    t.string :name
+    t.string :name, null: false
     t.integer :pricelist_id
+    t.integer :price_bundle_id
     t.text :department_ids
+  end
+
+  create_table :price_bundles do |t|
+    t.string :name, null: false
+  end
+
+  create_table :prices do |t|
+    t.decimal :price, null: false
+    t.integer :pricelist_id, null: false
+    t.integer :price_bundle_id, null: false
   end
 end

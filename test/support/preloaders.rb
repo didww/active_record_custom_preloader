@@ -1,7 +1,7 @@
 class ApplicationPreloader < ActiveRecordCustomPreloader::Preloader
 end
 
-class SimpleUserPreloader < ApplicationPreloader
+class SimplePreloader < ApplicationPreloader
   class_attribute :_called, instance_accessor: false, default: 0
 
   def preload(records)
@@ -19,6 +19,20 @@ class UserDepartmentsPreloader < ApplicationPreloader
   self.model_class_name = 'Department'
   self.association_foreign_keys_name = :department_ids
   self.keep_sorting = true
+
+  class_attribute :_called, instance_accessor: false, default: 0
+
+  def preload(records)
+    self.class._called += 1
+    super
+  end
+end
+
+class UserPricesPreloader < ApplicationPreloader
+  include ActiveRecordCustomPreloader::WithMultipleForeignKeysLoading
+  self.model_class_name = 'Price'
+  self.association_foreign_keys_names = [:pricelist_id, :price_bundle_id]
+  self.to_many = true
 
   class_attribute :_called, instance_accessor: false, default: 0
 
