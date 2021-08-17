@@ -26,6 +26,12 @@ class Price < ApplicationRecord
   add_custom_loader :_simple, class_name: 'SimplePreloader'
 end
 
+class Discount < ApplicationRecord
+  belongs_to :pricelist, class_name: 'Pricelist'
+  belongs_to :price_bundle, class_name: 'PriceBundle'
+  add_custom_loader :_simple, class_name: 'SimplePreloader'
+end
+
 class User < ApplicationRecord
   # columns id, name, pricelist_id, department_ids
   has_many :comments, class_name: 'Comment', dependent: :delete_all
@@ -36,6 +42,7 @@ class User < ApplicationRecord
   add_custom_loader :_simple, class_name: 'SimplePreloader'
   add_custom_loader :_departments, class_name: 'UserDepartmentsPreloader'
   add_custom_loader :_prices, class_name: 'UserPricesPreloader'
+  add_custom_loader :_discount, class_name: 'UserDiscountPreloader'
 end
 
 class Department < ApplicationRecord
