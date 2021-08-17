@@ -41,3 +41,16 @@ class UserPricesPreloader < ApplicationPreloader
     super
   end
 end
+
+class UserDiscountPreloader < ApplicationPreloader
+  include ActiveRecordCustomPreloader::WithMultipleForeignKeysLoading
+  self.model_class_name = 'Discount'
+  self.association_foreign_keys_names = [:pricelist_id, :price_bundle_id]
+
+  class_attribute :_called, instance_accessor: false, default: 0
+
+  def preload(records)
+    self.class._called += 1
+    super
+  end
+end
