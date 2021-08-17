@@ -26,7 +26,7 @@ module ActiveRecordCustomPreloader
       # Preload nested associations or custom loaders.
       # Allows to have nested preloading for custom loaders which load active record objects.
       if nested_assocs.any?
-        preloaded_records = records.flat_map { |r| r.public_send(association.name) }
+        preloaded_records = records.flat_map { |r| r.public_send(association.name) }.compact
         Array.wrap(nested_assocs).flat_map do |nested_assoc|
           preloaders_on(nested_assoc, preloaded_records, scope, polymorphic_parent)
         end
