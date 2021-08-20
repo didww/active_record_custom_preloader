@@ -53,6 +53,8 @@ module ActiveRecordCustomPreloader
 
     def fetch_association(parent_records)
       ids = parent_records.map(&association_foreign_keys_name).flatten.uniq.compact
+      return [] if ids.empty?
+
       associations_scope.where(id: ids).to_a
     end
 
