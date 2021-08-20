@@ -7,18 +7,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rails: [ '~> 6.0', '~> 6.1' ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-ruby@v1
         with:
           ruby-version: 2.5
 
-      - name: Bundle install Rails ${{ matrix.rails }}
+      - name: 'Bundle install Rails ~> 5.2'
         env:
-          RAILS_VERSION: ${{ matrix.rails }}
+          RAILS_VERSION: '~> 5.2'
         run: |
           gem install bundler
           bundle config path vendor/bundle
