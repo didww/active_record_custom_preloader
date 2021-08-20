@@ -1,0 +1,25 @@
+name: Run Tests
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.5
+
+      - name: 'Bundle install Rails ~> 5.2'
+        env:
+          RAILS_VERSION: '~> 5.2'
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Run tests
+        run: bundle exec rake test
